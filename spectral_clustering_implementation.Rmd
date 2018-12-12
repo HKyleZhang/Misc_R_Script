@@ -1,0 +1,134 @@
+---
+title: "spectral_clustering_implementation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Loading required packages:
+```{r}
+library(distory)
+library(phangorn)
+library(kdetrees)
+library(stats)
+library(dplyr)
+library(broom)
+library(ggplot2)
+```
+
+```{r include=FALSE}
+make.affinity <- function(S, n.neighboors=2) {
+  N <- length(S[,1])
+
+  if (n.neighboors >= N) {  # fully connected
+    A <- S
+  } else {
+    A <- matrix(rep(0,N^2), ncol=N)
+    for(i in 1:N) { # for each line
+      # only connect to those points with larger similarity 
+      best.similarities <- sort(S[i,], decreasing=TRUE)[1:n.neighboors]
+      for (s in best.similarities) {
+        j <- which(S[i,] == s)
+        A[i,j] <- S[i,j]
+        A[j,i] <- S[i,j] # to make an undirected graph, ie, the matrix becomes symmetric
+      }
+    }
+  }
+  A  
+}
+
+"%^%" <- function(M, power){
+  with(eigen(M), vectors %*% (values^power * solve(vectors)))
+}
+```
+
+
+Calculate the distance between trees:
+```{r}
+setwd("~/Desktop/analysis/")
+trees<-read.tree("gnTrees_noname.tre")
+clnum<-length(trees)
+
+geod<-dist.multiPhylo(trees)
+wrfd<-wRF.dist(trees)
+
+wrfd<-as.matrix(wrfd)
+tagname<-rownames(wrfd)
+geod<-as.matrix(geod)
+rownames(geod)<-tagname
+colnames(geod)<-tagname
+geod.median<-median(geod)
+geod.sig<-1.2 * geod.median
+
+eucd <- dist.diss(trees)          #Euclidean distances computation
+eucd.median<-median(eucd)
+eucd.sig<-1.2 * eucd.median
+```
+
+Spectral clustering:
+1. Normalized Laplacian:
+```{r}
+S <- exp((-eucd %^% 2)/(2 * (eucd.sig ** 2)))          #S represents the Similarity matrix
+A <- make.affinity(S, 3)
+D <- diag(apply(A, 1, sum))
+U <- D - A
+#L <- U                                        # unnormalized Laplacian
+L <- (D %^% (-1/2)) %*% U %*% (D %^% (-1/2))  # normalized Laplacian
+#L <- (D %^% (-1)) %*% U                        # random walk normalized Laplacian / generalized Laplacian
+
+evL <- eigen(L, symmetric=TRUE)
+plot(1:10, rev(evL$values)[1:10])
+
+for (k in 1:6){
+Z <- evL$vectors[,(ncol(evL$vectors)-k+1):ncol(evL$vectors)]
+km <- kmeans(Z, centers=k, nstart=20)
+plot(Z, col=km$cluster, pch=20, main = paste("k=", k))
+}
+```
+
+2.Random walk normalized Laplacian:
+```{r}
+S <- exp((-eucd %^% 2)/(2 * (eucd.sig ** 2)))           #S represents the Similarity matrix
+A <- make.affinity(S, 3)
+D <- diag(apply(A, 1, sum))
+U <- D - A
+L <- (D %^% (-1)) %*% U                        # random walk normalized Laplacian / generalized Laplacian
+
+evL <- eigen(L, symmetric=TRUE)
+plot(1:10, rev(evL$values)[1:10])
+
+for (k in 1:6){
+Z <- evL$vectors[,(ncol(evL$vectors)-k+1):ncol(evL$vectors)]
+km <- kmeans(Z, centers=k, nstart=20)
+plot(Z, col=km$cluster, pch=20, main = paste("k=", k))
+}
+```
+
+3.Ng, Jordan, Weiss Spectral Clustering Algorithm:
+```{r}
+A <- exp((-geod %^% 2)/(2 * (geod.sig ** 2)))
+A <- A - diag(diag(A))
+D <- diag(apply(A, 1, sum))
+L <- (D %^% (-1/2)) %*% U %*% (D %^% (-1/2))  # normalized Laplacian
+evL <- eigen(L, symmetric=TRUE)
+plot(1:10, rev(evL$values)[1:10])
+X <- evL$vectors
+Xsq <- X ** 2
+
+Y <- matrix(nrow = nrow(X), ncol = ncol(X))
+for (i in 1:nrow(X)){
+  for (j in 1:ncol(X)){
+    Y[i,j] <- X[i,j] / (sqrt(sum(Xsq[,1:j])))
+  }
+}
+
+kclusts <- data.frame(k=1:6) %>% group_by(k) %>% do(kclust=kmeans(Y, .$k))
+#clusters <- kclusts %>% group_by(k) %>% do(tidy(.$kclust[[1]]))
+assignments <- kclusts %>% group_by(k) %>% do(augment(.$kclust[[1]], Y))
+#clusterings <- kclusts %>% group_by(k) %>% do(glance(.$kclust[[1]]))
+p1 <- ggplot(assignments, aes(X1, X2)) + geom_point(aes(color=.cluster)) + facet_wrap(~ k)
+p1
+#p2 <- p1 + geom_point(data=clusters, size=10, shape="x")
+#p2
+```
