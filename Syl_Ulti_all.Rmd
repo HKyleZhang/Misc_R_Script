@@ -1,0 +1,185 @@
+---
+title: "ultimate"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+```{r}
+library(distory)
+library(phangorn)
+library(ggplot2)
+library(dendextend)
+library(grid)
+```
+
+Calculate the distance between trees:
+```{r}
+setwd("~/Desktop/analysis/")
+trees<-read.tree("gnTrees_collection.tre")
+clnum<-length(trees)
+
+geod<-dist.multiPhylo(trees)
+wrfd<-wRF.dist(trees)
+
+wrfd<-as.matrix(wrfd)
+tagname<-rownames(wrfd)
+geod<-as.matrix(geod)
+rownames(geod)<-tagname
+colnames(geod)<-tagname
+geod<-as.dist(geod)
+```
+
+Hierachical clustering + plotting dendrogram and heatmap:
+```{r}
+geod.hclust<-hclust(geod, method = "ward.D2")
+```
+
+Polish dendrogram:
+```{r}
+gd.den <- as.dendrogram(geod.hclust) %>% set("labels_colors", value = "black") %>% set("labels_cex", 0.4) %>% 
+  set("branches_k_color", value = c("aquamarine4","coral2","deepskyblue2", "yellow3","magenta2"), k=5)
+ggd1 <- as.ggdend(gd.den)
+
+p <- ggplot(ggd1, horiz= TRUE, theme = NULL) + ylab("Height") + theme(axis.line.y = element_blank(), axis.ticks.y = element_blank(), axis.title.y = element_blank(), axis.text.y  = element_blank(), axis.line.x = element_blank(), panel.grid.major.x = element_line(colour = "gray90"), panel.grid.minor.x = element_blank(), panel.background = element_rect(fill = "white"), plot.margin = unit(c(0.8,0,1.7,0),"cm"), panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank())
+```
+
+Plot cluster tree
+```{r}
+setwd("~/Desktop/analysis/")
+sgtre<-read.tree("supergnTrees_collection.tre")
+brlen1 <- mean(sgtre$cluster01$edge.length) * (sgtre$cluster01$Nnode)/2 * 2
+brlen2 <- mean(sgtre$cluster02$edge.length) * (sgtre$cluster02$Nnode)/2 * 2
+brlen3 <- mean(sgtre$cluster03$edge.length) * (sgtre$cluster03$Nnode)/2 * 2
+brlen4 <- mean(sgtre$cluster04$edge.length) * (sgtre$cluster04$Nnode)/2 * 2
+brlen5 <- mean(sgtre$cluster05$edge.length) * (sgtre$cluster05$Nnode)/2 * 2
+brlen6 <- mean(sgtre$cluster06$edge.length) * (sgtre$cluster06$Nnode)/2 * 2
+
+library(ggtree)
+cltre4 <- ggtree(sgtre[[4]]) + geom_tiplab(size=3) + theme(plot.margin = unit(c(0.5,1,0,0),"cm")) + geom_treescale(width = 0.01) + xlim(0,brlen4)
+cltre2 <- ggtree(sgtre[[2]]) + geom_tiplab(size=3) + theme(plot.margin = unit(c(0.5,1,0,0),"cm")) + geom_treescale(width = 0.01) + xlim(0,brlen2)
+cltre5 <- ggtree(sgtre[[5]]) + geom_tiplab(size=3) + theme(plot.margin = unit(c(1.5,1,0,0),"cm")) + geom_treescale(width = 0.01) + xlim(0,brlen5)
+cltre6 <- ggtree(sgtre[[6]]) + geom_tiplab(size=3) + theme(axis.title.x = element_text(vjust=-17, hjust = 0.5), plot.margin = unit(c(0.5,1,2.9,0),"cm")) + geom_treescale(width = 0.01) + labs(x="Supergene trees") + xlim(0,brlen6)
+cltre1 <- ggtree(sgtre[[1]]) + geom_tiplab(size=3) + theme(plot.margin = unit(c(0.5,1,0,0),"cm")) + geom_treescale(width = 0.01) + xlim(0,brlen1)
+cltre3 <- ggtree(sgtre[[3]]) + geom_tiplab(size=3) + theme(plot.margin = unit(c(0.5,1,0,0),"cm")) + geom_treescale(width = 0.01) + xlim(0,brlen3)
+
+```
+
+Load cluster information data:
+```{r}
+dd<-read.table("~/Desktop/analysis/Cluster_Assignment_shortdata.summary")
+names(dd)<-c("order","gene","Cluster1","Cluster2","Cluster3","Cluster4","Cluster5","Cluster6")
+dd[,3:8] <- dd[,3:8] / 10
+dd$order<-factor(dd$order)
+Auto <- dd[1:45,]
+S <- dd[46:75,]
+```
+
+```{r}
+cl1A <- ggplot() + geom_bar(data = Auto, aes(x = order, y = Cluster1), stat = "identity", fill = "coral2", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), plot.margin = unit(c(0,0,0,0.6),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(limits = c(0,100))
+
+cl1S <- ggplot() + geom_bar(data = S, aes(x = order, y = Cluster1), stat = "identity", fill = "coral2", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), plot.margin = unit(c(0,0.6,0,0.1),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(position = "right", limits = c(0,100))
+
+
+
+cl6A <- ggplot() + geom_bar(data = Auto, aes(x = order, y = Cluster6), stat = "identity", fill = "magenta2", width = 0.9) + theme(axis.title.x = element_text(vjust=-0.5, hjust = 0.5), axis.text.x = element_text(size = 7, vjust = 0.5, hjust = 1, angle = 90), axis.title.y = element_blank(), plot.margin = unit(c(0,0,1.2,0.6),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_x_discrete(position = "bottom", labels = Auto$gene) + scale_y_continuous(limits = c(0,100)) + labs(x="Autosome genes")
+
+cl6S <- ggplot() + geom_bar(data = S, aes(x = order, y = Cluster6), stat = "identity", fill = "magenta2", width = 0.9) + theme(axis.title.x = element_text(vjust=-2.2, hjust = 0.5), axis.text.x = element_text(size = 7, vjust = 0.5, hjust = 1, angle = 90), axis.title.y = element_blank(), plot.margin = unit(c(0,0.6,1.32,0.1),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_x_discrete(position = "bottom", labels = S$gene) + scale_y_continuous(position = "right",  limits = c(0,100)) + labs(x="Neo-sex chromosome genes")
+
+
+
+cl5A <- ggplot() + geom_bar(data = Auto, aes(x = order, y = Cluster5), stat = "identity", fill = "blueviolet", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x.top = element_text(size = 7, vjust = 0.5, hjust = 0, angle = 90), axis.title.y = element_blank(), plot.margin = unit(c(0.25,0,0.1,0.6),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_x_discrete(position = "top", labels = Auto$gene) + scale_y_continuous(limits = c(0,100))
+
+cl5S <- ggplot() + geom_bar(data = S, aes(x = order, y = Cluster5), stat = "identity", fill = "blueviolet", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x.top = element_text(size = 7, vjust = 0.5, hjust = 0, angle = 90), axis.title.y = element_blank(), plot.margin = unit(c(0.35,0.6,0.1,0.1),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_x_discrete(position = "top", labels = S$gene) + scale_y_continuous(position = "right",  limits = c(0,100))
+
+
+
+
+cl2A <- ggplot() + geom_bar(data = Auto, aes(x = order, y = Cluster2), stat = "identity", fill = "aquamarine4", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), plot.margin = unit(c(0,0,0,0.6),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(limits = c(0,100))
+
+cl2S <- ggplot() + geom_bar(data = S, aes(x = order, y = Cluster2), stat = "identity", fill = "aquamarine4", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(),plot.margin = unit(c(0,0.6,0,0.1),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(position = "right",  limits = c(0,100)) 
+
+
+
+cl3A <- ggplot() + geom_bar(data = Auto, aes(x = order, y = Cluster3), stat = "identity", fill = "yellow3", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), plot.margin = unit(c(0,0,0,0.6),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(limits = c(0,100))
+
+cl3S <- ggplot() + geom_bar(data = S, aes(x = order, y = Cluster3), stat = "identity", fill = "yellow3", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), plot.margin = unit(c(0,0.6,0,0.1),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(position = "right",  limits = c(0,100))
+
+
+cl4A <- ggplot() + geom_bar(data = Auto, aes(x = order, y = Cluster4), stat = "identity", fill = "deepskyblue2", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_text(vjust = -1, hjust = 0.5), plot.margin = unit(c(0,0,0,0),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(limits = c(0,100)) + labs(y="percentage(%)")
+
+cl4S <- ggplot() + geom_bar(data = S, aes(x = order, y = Cluster4), stat = "identity", fill = "deepskyblue2", width = 0.9) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_text(vjust = -1),plot.margin = unit(c(0,0.2,0,0.1),"cm"), panel.grid.minor.y = element_blank(), panel.background = element_rect(color = "black")) + scale_y_continuous(position = "right",  limits = c(0,100)) + labs(y="percentage(%)")
+```
+
+```{R}
+layout <- matrix(c(1,1,2,2,2,3,3,14,14,
+                   1,1,2,2,2,3,3,14,14,
+                   1,1,2,2,2,3,3,14,14,
+                   1,1,4,4,4,5,5,15,15,
+                   1,1,4,4,4,5,5,15,15,
+                   1,1,6,6,6,7,7,16,16,
+                   1,1,6,6,6,7,7,16,16,
+                   1,1,8,8,8,9,9,17,17,
+                   1,1,8,8,8,9,9,17,17,
+                   1,1,10,10,10,11,11,18,18,
+                   1,1,10,10,10,11,11,18,18,
+                   1,1,12,12,12,13,13,19,19,
+                   1,1,12,12,12,13,13,19,19,
+                   1,1,12,12,12,13,13,19,19,
+                   1,1,12,12,12,13,13,19,19),15,9,byrow = TRUE)
+svg("ClusterAssign.svg", width = 15, height = 10)
+multiplot(p,cl5A,cl5S,cl3A,cl3S,cl1A,cl1S,cl4A,cl4S,cl2A,cl2S,cl6A,cl6S,cltre5,cltre3,cltre1,cltre4,cltre2,cltre6,layout = layout)
+dev.off()
+```
+
+
