@@ -1,0 +1,76 @@
+---
+title: "get_cluster"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Loading required packages:
+```{r}
+library(distory)
+library(phangorn)
+library(heatmap3)
+library(gplots)
+```
+
+Calculate the distance between trees:
+```{r}
+setwd("~/Desktop/analysis/")
+trees<-read.tree("gnTrees_collection.tre")
+clnum<-length(trees)
+
+geod<-dist.multiPhylo(trees)
+wrfd<-wRF.dist(trees)
+
+wrfd<-as.matrix(wrfd)
+tagname<-rownames(wrfd)
+geod<-as.matrix(geod)
+rownames(geod)<-tagname
+colnames(geod)<-tagname
+geod<-as.dist(geod)
+```
+
+Hierachical clustering + plotting dendrogram and heatmap:
+```{r}
+geod.hclust<-hclust(geod, method = "ward.D2")
+svg("dendrogram.svg")
+plot(geod.hclust)
+dev.off()
+plot(geod.hclust)
+
+gdm<-as.matrix(geod)
+svg("heatmap.svg")
+heatmap3(gdm, Rowv = as.dendrogram(geod.hclust), symm = TRUE)
+dev.off()
+heatmap.2(gdm, Rowv = as.dendrogram(geod.hclust), symm = TRUE)
+```
+
+Retrieve the clusters:
+```{r}
+dlpre <- as.data.frame(geod.hclust$labels)
+dl<- dlpre$`geod.hclust$labels`[order.dendrogram(as.dendrogram(geod.hclust))]
+dl <- as.data.frame(dl)
+write.table(dl,file = "dend.order", quote = FALSE, col.names = FALSE, row.names = FALSE)
+
+if (clnum > 15){
+  clnum<-15
+}
+for(j in 1:clnum){
+cl<-cutree(geod.hclust, k = j)
+   if (j < 10){
+      j=paste("0",j,sep= "")
+      nj=paste("k",j,".cl",sep = "")}
+   else
+   {nj=paste("k",j,".cl",sep = "")}
+write.table(cl, nj, quote = FALSE, col.names = FALSE)
+}
+```
+
+```{bash}
+if [ ! -e clinfo ]; then
+   mkdir clinfo
+fi
+mv *cl *order clinfo/
+```
+
