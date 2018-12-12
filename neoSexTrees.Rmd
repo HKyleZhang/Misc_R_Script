@@ -1,0 +1,100 @@
+---
+title: "neoSex"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(ggtree)
+require(adephylo)
+tree <- read.tree("gnTrees_collection.tre")
+dd <- read.table("taxa", header = TRUE)
+
+brlen <- max(distRoot(tree[[1]], method = "patristic")) * 1.1
+p <- ggtree(tree[[1]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("01.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[2]], method = "patristic")) * 1.1
+p <-ggtree(tree[[2]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("02.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[3]], method = "patristic")) * 1.1
+p <- rotate(rotate(ggtree(tree[[3]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale(),15),20)
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("03.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[4]], method = "patristic")) * 1.1
+p <- ggtree(tree[[4]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("04.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[5]], method = "patristic")) * 1.1
+p <- ggtree(tree[[5]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("05.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[6]], method = "patristic")) * 1.1
+p <- ggtree(tree[[6]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("06.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[7]], method = "patristic")) * 1.1
+p <- ggtree(tree[[7]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("07.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[8]], method = "patristic")) * 1.1
+p <- ggtree(tree[[8]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("08.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[9]], method = "patristic")) * 1.15
+p <- ggtree(tree[[9]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("09.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[10]], method = "patristic")) * 1.1
+p <- rotate(rotate(ggtree(tree[[10]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale(),18),15)
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("10.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[11]], method = "patristic")) * 1.15
+p <- ggtree(tree[[11]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("11.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[12]], method = "patristic")) * 1.15
+p <- ggtree(tree[[12]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("12.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[13]], method = "patristic")) * 1.1
+p <- rotate(rotate(rotate(ggtree(tree[[13]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale(),13),16),18)
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("13.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[14]], method = "patristic")) * 1.15
+p <- ggtree(tree[[14]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("14.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[15]], method = "patristic")) * 1.1
+p <- ggtree(tree[[15]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale()
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("15.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[16]], method = "patristic")) * 1.1
+p <- rotate(rotate(rotate(rotate(ggtree(tree[[16]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale(),13),14),17),19)
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("16.svg", p, width = 7, height = 7)
+
+brlen <- max(distRoot(tree[[17]], method = "patristic")) * 1.1
+p <- rotate(rotate(ggtree(tree[[17]]) + geom_nodelab(aes(labels = node), hjust = 0, vjust = 0.5, size = 5) + xlim(0,brlen) + geom_treescale(),14),17)
+p <- p %<+% dd + geom_tiplab(aes(color=I(col)), size = 7)
+ggsave("17.svg", p, width = 7, height = 7)
+```
