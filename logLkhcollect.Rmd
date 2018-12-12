@@ -1,0 +1,54 @@
+---
+title: "loglkhcollect"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{bash}
+mkdir ~/Desktop/value
+cd ~/Desktop/logLikelihood
+for file in *
+do
+  name=$(echo "${file}")
+  cat ${file} | cut -d $'\t' -f 2 > ~/Desktop/value/${name}
+done
+
+mv ~/Desktop/value/whole_concatenation_chr_logLhcollection ~/Desktop/
+```
+
+```{r}
+setwd("~/Desktop/value")
+out.file <- ""
+file.names <- dir(pattern = "logLhcollection")
+for(i in 1:length(file.names)){
+  file<-read.table(file.names[i])
+  out.file <- cbind(out.file, file)
+}
+write.csv(out.file, file = "logLkhcollection.csv")
+```
+```{r}
+da<-read.csv("~/Desktop/value/logLkhcollection.csv")
+acdata<-read.table("~/Desktop/whole_concatenation_chr_logLhcollection", header = FALSE)
+da<-cbind(acdata,da[,3:102])
+for(k in 1:14){
+  da[k,]<-da[k,]-da[k+1,]
+}
+da<-rbind(da[1:14,])
+pernum<-seq(1:100)
+names(da)<-c("Actual.data", pernum)
+peravrg<-apply(cbind(da[,2:101]), 1, mean)
+persd<-apply(cbind(da[,2:101]), 1, sd)
+daforR<-cbind(da$Actual.data,peravrg,persd,da[,2:101])
+names(daforR)<-c("Actual.data","Average","SD",pernum)
+write.csv(daforR,file = "logLkhforR.csv")
+```
+
+```{bash}
+mv ~/Desktop/whole_concatenation_chr_logLhcollection ~/Desktop/value/
+mv ~/Desktop/value ~/Desktop/logLikelihood
+mv ~/Desktop/logLikelihood/value/logLkhcollection.csv ~/Desktop/
+```
+
