@@ -49,7 +49,9 @@ best_vol <- function(input_tb) {
 }
 
 dd <- read_excel(file)
-dd <- dd %>% group_by(`Sample ID`) %>%
+dd <- dd %>% 
+  mutate(identifier=paste(`Sample ID`, `Date and Time`, sep = '_')) %>% 
+  group_by(`identifier`) %>%
   nest() %>%
   mutate(value = map(data, best_vol)) %>%
   unnest() %>%
@@ -57,7 +59,9 @@ dd <- dd %>% group_by(`Sample ID`) %>%
     col = value,
     into = c('Target vol', 'Target conc', 'Ori vol', 'Added TE vol'),
     sep = ' '
-  )
+  ) %>% 
+  select(-identifier) %>% 
+  select(`#`,`Sample ID`, everything())
 dd$Unit <- rep('ng/uL', nrow(dd))
 
 write_csv(dd, "output.csv")
