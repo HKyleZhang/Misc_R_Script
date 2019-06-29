@@ -28,7 +28,7 @@ best_vol <- function(input_tb) {
         mutate(V_d_score,
                C_d_score,
                V_o_score,
-               ttl_score = sum(V_d_score, C_d_score, V_o_score)) %>%
+               ttl_score = V_d_score + C_d_score + V_o_score) %>%
         arrange(desc(ttl_score), desc(V_o_score)) %>%
         .[1, ] %>%
         mutate(te = V_d - V_o)
