@@ -12,7 +12,7 @@ res <- map2(sp_ls,
             ~searchbyterm(specificepithet = .x, 
                           genus = .y, 
                           limit = 1000, 
-                          year = c('>1980','<2020')
+                          year = c('>1920','<2020')
                           )$data
             )
 
