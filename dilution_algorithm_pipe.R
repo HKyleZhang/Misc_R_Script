@@ -54,11 +54,11 @@ best_vol <- function(input_tb, iV_d, iC_d) {
 
 dd <- read_excel(file)
 dd <- dd %>% 
-  mutate(identifier=paste(`Sample ID`, `Date and Time`, sep = '_')) %>% 
-  group_by(`identifier`) %>%
-  nest() %>%
-  mutate(value = map(data, ~best_vol(.x, iV_d = V_d, iC_d = C_d))) %>%
-  unnest() %>%
+  mutate(identifier=paste(`Sample ID`, `Date and Time`, sep = '_')) %>%
+  nest(data = -identifier) %>%
+  mutate(value = map(data, ~best_vol(.x, iV_d = V_d, iC_d = C_d) )) %>%
+  select(identifier, value, data) %>% 
+  unnest(cols = c(value, data)) %>%
   separate(
     col = value,
     into = c('Target vol', 'Target conc', 'Ori vol', 'Added TE vol'),
